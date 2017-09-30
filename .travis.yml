@@ -2,18 +2,20 @@ language: python
 dist: trusty
 sudo: required
 python:
-  - 3.5
   - 3.6
+  - 3.5
 env:
+  global:
+    - NO_SLOW=true
   matrix:
     - PANDAS_VERSION=0.18 NUMPY_VERSION=1.11
     - PANDAS_VERSION=0.19 NUMPY_VERSION=1.12
-    - PANDAS_VERSION=0.20 NUMPY_VERSION=1.13
+    - PANDAS_VERSION=0.20 NUMPY_VERSION=1.13 NO_SLOW=false
 
 matrix:
   exclude:
     - python: 3.6
-      env: PANDAS_VERSION=0.18
+      env: PANDAS_VERSION=0.18 NUMPY_VERSION=1.11
 
 cache:
   directories:
@@ -32,7 +34,12 @@ install:
   - rm -fr sksurv
 
 # command to run tests
-script: nosetests -w tests --with-coverage --cover-xml --cover-package=sksurv --cover-tests
+script: |
+  if [[ "x$NO_SLOW" != "xtrue" ]]; then
+  nosetests -w tests --with-coverage --cover-xml --cover-package=sksurv --cover-tests
+  else
+  nosetests -w tests -a "!slow" --with-coverage --cover-xml --cover-package=sksurv --cover-tests
+  fi
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
